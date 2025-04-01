@@ -1,9 +1,44 @@
 #include <iostream>
+#include <string>
+#include <vector>
 using namespace std;
+
+struct item
+{
+    string nome;
+    string nomeDono;
+    string propMagica;
+    int numIdent;
+    int raridade;
+};
+
+;
+
+vector<item> inventario;
+
 
 void inserir_item()
 {
-    cout << "Funcionalidade em construcao" << endl;
+
+    item novoItem;
+
+    cout << "VAMOS INSERIR UM NOVO ITEM:" << endl;
+    cout << "" << endl;
+    cout << "Insiria o nome do item: ";
+    cin >> novoItem.nome;
+    cout << "Insiria o nome do dono: ";
+    cin >> novoItem.nomeDono;
+    cout << "Insira a propriedade magica: ";
+    cin >> novoItem.propMagica;
+    cout << "Insiria o numero de identificacao: ";
+    cin >> novoItem.numIdent;
+    cout << "Insiria a raridade: ";
+    cin >> novoItem.raridade;
+
+    inventario.push_back(novoItem);
+    cout << endl;
+    cout << "ITEM ADICIONADO COM SUCESSO!" << endl;
+    cout << endl;
 };
 
 void cadastrar_similidaridade()
@@ -13,7 +48,18 @@ void cadastrar_similidaridade()
 
 void buscar_items()
 {
-    cout << "Funcionalidade em construcao" << endl;
+    int tamanhoInventario = inventario.size();
+
+    cout << "ITENS NO INVENTARIO: " << tamanhoInventario << endl;
+    cout << "- - - - -" << endl;
+
+    for (int i = 0; i < tamanhoInventario; i++)
+    {
+        cout << inventario[i].nome << endl;
+        cout << "- - - - -" << endl;
+    }
+
+    cout << "FIM DO INVENTARIO! " << endl;
 };
 
 void verificar_item()
@@ -61,6 +107,7 @@ int main()
         cout << "" << endl;
         cout << "Digite uma opcao: ";
         cin >> opcao;
+        cout << "----------------------------" << endl;
         switch (opcao)
         {
         case 1:
@@ -90,6 +137,7 @@ int main()
         default:
             break;
         }
+        cout << "----------------------------" << endl;
     }
 
     return 0;
