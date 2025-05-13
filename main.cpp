@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#define nullptr NULL
 using namespace std;
 
 struct item
@@ -17,33 +18,89 @@ struct Aresta
 {
     int origem, destino, peso;
 };
+struct Node
+{
+    item dado;
+    Node *esquerda;
+    Node *direita;
+};
+struct NodeAlfabetica
+{
+    item dados;
+    NodeAlfabetica *esquerda;
+    NodeAlfabetica *direita;
+};
+
+Node *raiz = nullptr;
 
 vector<item> inventario;
 list<Aresta> grafo[1000];
 
-void inserir_item()
+NodeAlfabetica *inserirPorNome(NodeAlfabetica *raiz, item novoItem)
 {
+    if (raiz == NULL)
+    {
+        NodeAlfabetica *novoNo = new NodeAlfabetica;
+        novoNo->dados = novoItem;
+        novoNo->esquerda = NULL;
+        novoNo->direita = NULL;
+        return novoNo;
+    }
 
-    item novoItem;
+    if (novoItem.nome < raiz->dados.nome)
+        raiz->esquerda = inserirPorNome(raiz->esquerda, novoItem);
+    else
+        raiz->direita = inserirPorNome(raiz->direita, novoItem);
 
-    cout << "VAMOS INSERIR UM NOVO ITEM:" << endl;
-    cout << "" << endl;
-    cout << "Insira o nome do item: ";
-    cin >> novoItem.nome;
-    cout << "Insira o nome do dono: ";
-    cin >> novoItem.nomeDono;
-    cout << "Insira a propriedade magica: ";
-    cin >> novoItem.propMagica;
-    cout << "Insira o numero de identificacao: ";
-    cin >> novoItem.numIdent;
-    cout << "Insira a raridade: ";
-    cin >> novoItem.raridade;
+    return raiz;
+}
 
-    inventario.push_back(novoItem);
-    cout << endl;
-    cout << "ITEM ADICIONADO COM SUCESSO!" << endl;
-    cout << endl;
-};
+void listarEmOrdemAlfabetica(NodeAlfabetica *raiz)
+{
+    if (raiz != NULL)
+    {
+        listarEmOrdemAlfabetica(raiz->esquerda);
+        cout << "Item: " << raiz->dados.nome << endl;
+        cout << "Dono: " << raiz->dados.nomeDono << endl;
+        cout << "Propriedade: " << raiz->dados.propMagica << endl;
+        cout << "Raridade: " << raiz->dados.raridade << endl;
+        cout << "-------------------------" << endl;
+        listarEmOrdemAlfabetica(raiz->direita);
+    }
+}
+
+void listar_itens_ordem_alfabetica()
+{
+    if (inventario.empty())
+    {
+        cout << "Nenhum item no inventario." << endl;
+        return;
+    }
+
+    NodeAlfabetica *raiz = NULL;
+
+    // Inserir todos os itens do inventário na árvore
+    for (size_t i = 0; i < inventario.size(); i++)
+    {
+        raiz = inserirPorNome(raiz, inventario[i]);
+    }
+
+    cout << "ITENS ORDENADOS POR ORDEM ALFABETICA:" << endl;
+    cout << "-------------------------------------" << endl;
+
+    listarEmOrdemAlfabetica(raiz);
+}
+
+Node *buscar_na_arvore(Node *raiz, int numIdent)
+{
+    if (raiz == nullptr || raiz->dado.numIdent == numIdent)
+        return raiz;
+
+    if (numIdent < raiz->dado.numIdent)
+        return buscar_na_arvore(raiz->esquerda, numIdent);
+    else
+        return buscar_na_arvore(raiz->direita, numIdent);
+}
 
 void visualizar_similaridades()
 {
@@ -66,6 +123,7 @@ void cadastrar_similaridade()
     int codigoItem1, codigoItem2, similaridade;
     char continuar;
     char verSimilaridades;
+    int tamanhoInventario = inventario.size();
 
     cout << "CADASTRAR SIMILARIDADE ENTRE ITENS" << endl;
     cout << "---------------------------------" << endl;
@@ -80,7 +138,7 @@ void cadastrar_similaridade()
         cin >> similaridade;
 
         bool item1Existe = false, item2Existe = false;
-        for (int i = 0; i < inventario.size(); i++)
+        for (int i = 0; i < tamanhoInventario; i++)
         {
             if (inventario[i].numIdent == codigoItem1)
                 item1Existe = true;
@@ -122,6 +180,27 @@ void cadastrar_similaridade()
         visualizar_similaridades();
     }
 }
+
+void inserir_item()
+{
+    item novoItem;
+    cout << "VAMOS INSERIR UM NOVO ITEM:" << endl;
+    cout << "" << endl;
+    cout << "Insira o nome do item: ";
+    cin >> novoItem.nome;
+    cout << "Insira o nome do dono: ";
+    cin >> novoItem.nomeDono;
+    cout << "Insira a propriedade magica: ";
+    cin >> novoItem.propMagica;
+    cout << "Insira o numero de identificacao: ";
+    cin >> novoItem.numIdent;
+    cout << "Insira a raridade: ";
+    cin >> novoItem.raridade;
+    inventario.push_back(novoItem);
+    cout << endl;
+    cout << "ITEM ADICIONADO COM SUCESSO!" << endl;
+    cout << endl;
+};
 
 void buscar_items()
 {
@@ -207,8 +286,8 @@ void verificar_item()
 
 void listar_itens_alfabetica()
 {
-    cout << "Funcionalidade em construcao" << endl;
-};
+    listar_itens_ordem_alfabetica();
+}
 
 void listar_itens_raridade()
 {
