@@ -5,13 +5,24 @@
 #define nullptr NULL
 using namespace std;
 
-struct item
-{
+
+struct Ponto {
+    double x;
+    double y;
+};
+
+struct ContornoItem {
+    vector<Ponto> pontos;  // Lista de pontos que definem o polígono
+    bool ehConvexo;        // Flag para indicar se o polígono é convexo
+};
+
+struct item {
     string nome;
     string nomeDono;
     string propMagica;
     int numIdent;
     int raridade;
+    ContornoItem contorno;  // Adicionando a estrutura de contorno
 };
 
 struct Aresta
@@ -31,10 +42,39 @@ struct NodeAlfabetica
     NodeAlfabetica *direita;
 };
 
+
+
+
+
+
 Node *raiz = nullptr;
 
 vector<item> inventario;
 list<Aresta> grafo[1000];
+
+bool verificarConvexidade(const vector<Ponto>& pontos) {
+    int n = pontos.size();
+    if (n < 3) return false;  // Não é polígono válido
+
+    int sinal = 0;
+    for (int i = 0; i < n; i++) {
+        Ponto p1 = pontos[i];
+        Ponto p2 = pontos[(i+1)%n];
+        Ponto p3 = pontos[(i+2)%n];
+
+        // Calcula o produto vetorial
+        double cross = (p2.x - p1.x)*(p3.y - p2.y) - (p2.y - p1.y)*(p3.x - p2.x);
+
+        if (cross != 0) {
+            if (sinal == 0) {
+                sinal = (cross > 0) ? 1 : -1;
+            } else if ((cross > 0 && sinal == -1) || (cross < 0 && sinal == 1)) {
+                return false;  // Polígono não é convexo
+            }
+        }
+    }
+    return true;  // Polígono é convexo
+}
 
 NodeAlfabetica *inserirPorNome(NodeAlfabetica *raiz, item novoItem)
 {
@@ -91,16 +131,6 @@ void listar_itens_ordem_alfabetica()
     listarEmOrdemAlfabetica(raiz);
 }
 
-Node *buscar_na_arvore(Node *raiz, int numIdent)
-{
-    if (raiz == nullptr || raiz->dado.numIdent == numIdent)
-        return raiz;
-
-    if (numIdent < raiz->dado.numIdent)
-        return buscar_na_arvore(raiz->esquerda, numIdent);
-    else
-        return buscar_na_arvore(raiz->direita, numIdent);
-}
 
 void visualizar_similaridades()
 {
@@ -181,11 +211,9 @@ void cadastrar_similaridade()
     }
 }
 
-void inserir_item()
-{
+void inserir_item() {
     item novoItem;
     cout << "VAMOS INSERIR UM NOVO ITEM:" << endl;
-    cout << "" << endl;
     cout << "Insira o nome do item: ";
     cin >> novoItem.nome;
     cout << "Insira o nome do dono: ";
@@ -196,29 +224,65 @@ void inserir_item()
     cin >> novoItem.numIdent;
     cout << "Insira a raridade: ";
     cin >> novoItem.raridade;
+
+    
+    int numPontos;
+    cout << "Quantos pontos formam o contorno do item? ";
+    cin >> numPontos;
+
+    cout << "Digite as coordenadas dos pontos (x y):" << endl;
+    for (int i = 0; i < numPontos; i++) {
+        Ponto p;
+        cout << "Ponto " << i+1 << ": ";
+        cin >> p.x >> p.y;
+        novoItem.contorno.pontos.push_back(p);
+    }
+
+    
+    if (!verificarConvexidade(novoItem.contorno.pontos)) {
+        cout << "ERRO: O contorno do item nao forma um poligono convexo!" << endl;
+        cout << "Item nao pode ser adicionado a bolsa." << endl;
+        return;
+    }
+
+    
     inventario.push_back(novoItem);
-    cout << endl;
-    cout << "ITEM ADICIONADO COM SUCESSO!" << endl;
-    cout << endl;
-};
+    cout << endl << "ITEM ADICIONADO COM SUCESSO!" << endl << endl;
+}
 
 void buscar_items()
 {
     int tamanhoInventario = inventario.size();
+    string nomeItem, tentarDenovo;
+    bool achou = false;
+    
 
-    cout << "ITENS NO INVENTARIO: " << tamanhoInventario << endl;
-    cout << "- - - - -" << endl;
+    cout << "DIGITE O NOME DO ITEM QUE DESEJA ENCONTRAR: ";
+    cin >> nomeItem;
+    cout << "-------------------" << endl;
+    
 
-    for (int i = 0; i < tamanhoInventario; i++)
-    {
-        cout << "Item: " << inventario[i].nome << endl;
-        cout << "Dono: " << inventario[i].nomeDono << endl;
-        cout << "Propriedade: " << inventario[i].propMagica << endl;
-        cout << "Raridade: " << inventario[i].raridade << endl;
-        cout << "- - - - -" << endl;
+    for(int i = 0; i < tamanhoInventario; i++){
+        if(inventario[i].nome == nomeItem){
+            cout << "ITEM ENCONTRADO" << endl;
+            cout << "-------------------" << endl;
+            cout << "ITEM: " << inventario[i].nome << endl;
+            cout << "PROPRIEDADE: " << inventario[i].propMagica << endl;
+            cout << "RARIDADE: " << inventario[i].raridade << endl;
+            cout << "-------------------" << endl;
+            achou = true;
+        }
     }
+    if(!achou){
+        cout << "NENHUM ITEM ENCONTRADO! DESEJA TENTAR DENOVO? (s/n):";
+        cin >> tentarDenovo;
+        if(tentarDenovo == "s" || tentarDenovo == "S"){
+            buscar_items();
+        }
+    }
+    
 
-    cout << "FIM DO INVENTARIO! " << endl;
+    
 };
 
 void verificar_item()
@@ -291,17 +355,130 @@ void listar_itens_alfabetica()
 
 void listar_itens_raridade()
 {
-    cout << "Funcionalidade em construcao" << endl;
-};
+    if (inventario.empty())
+    {
+        cout << "Nenhum item no inventario." << endl;
+        return;
+    }
+
+
+    
+    vector<item> inventarioOrdenado = inventario;
+
+    int tamanhoInventario = inventarioOrdenado.size();
+
+   
+    for (int i = 0; i < tamanhoInventario - 1; ++i)
+    {
+        for (int j = 0; j < tamanhoInventario - i - 1; ++j)
+        {
+            if (inventarioOrdenado[j].raridade < inventarioOrdenado[j + 1].raridade)
+            {
+                
+                item temp = inventarioOrdenado[j];
+                inventarioOrdenado[j] = inventarioOrdenado[j + 1];
+                inventarioOrdenado[j + 1] = temp;
+            }
+        }
+    }
+
+    cout << "ITENS ORDENADOS POR RARIDADE (DECRESCENTE):" << endl;
+    cout << "------------------------------------------" << endl;
+
+    for (int i = 0; i < tamanhoInventario; i++)
+    {
+        cout << "Item: " << inventarioOrdenado[i].nome << endl;
+        cout << "Dono: " <<  inventarioOrdenado[i].nomeDono << endl;
+        cout << "Propriedade: " <<  inventarioOrdenado[i].propMagica << endl;
+        cout << "Raridade: " <<  inventarioOrdenado[i].raridade << endl;
+        cout << "Numero de Identificacao: " <<  inventarioOrdenado[i].numIdent << endl;
+        cout << "-------------------------" << endl;
+    }
+}
 
 void contar_itens_mesma_prop()
 {
-    cout << "Funcionalidade em construcao" << endl;
+    int tamanhoInventario = inventario.size();
+    string propTarget;
+    int contador = 0;
+
+    cout << "QUAL PROPRIEDADE DESEJA CONTAR: ";
+    cin >> propTarget;
+    cout << "-----------------" << endl;
+
+    for(int i = 0; i < tamanhoInventario; i++){
+        if(inventario[i].propMagica == propTarget){
+            contador ++;
+        }
+    }
+
+    cout << "EXISTEM " << contador << " ITENS COM ESSA PROPRIEDADE!" << endl;
+
 }
 
 void remover_itens_menos_raros()
 {
-    cout << "Funcionalidade em construcao" << endl;
+    if (inventario.empty())
+    {
+        cout << "Nenhum item no inventario." << endl;
+        return;
+    }
+
+    int raridadeMinima;
+    cout << "Digite o valor minimo de raridade (R): ";
+    cin >> raridadeMinima;
+
+    vector<int> itensRemovidos;
+
+   
+    for (vector<item>::iterator it = inventario.begin(); it != inventario.end(); )
+    {
+        if (it->raridade < raridadeMinima)
+        {
+            itensRemovidos.push_back(it->numIdent);
+            it = inventario.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+
+   
+    for (size_t i = 0; i < itensRemovidos.size(); ++i)
+    {
+        int id = itensRemovidos[i];
+        grafo[id].clear();
+    }
+
+   
+    for (size_t i = 0; i < 1000; ++i)
+    {
+        for (list<Aresta>::iterator it = grafo[i].begin(); it != grafo[i].end(); )
+        {
+            bool destinoFoiRemovido = false;
+            for (size_t j = 0; j < itensRemovidos.size(); ++j)
+            {
+                if (it->destino == itensRemovidos[j])
+                {
+                    destinoFoiRemovido = true;
+                    break;
+                }
+            }
+
+            if (destinoFoiRemovido)
+            {
+                it = grafo[i].erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    cout << "Itens com raridade menor que " << raridadeMinima << " foram removidos." << endl;
+    cout << "Total de itens removidos: " << itensRemovidos.size() << endl;
 }
 
 int main()
@@ -315,7 +492,7 @@ int main()
         cout << "Escolha uma opcao abaixo: " << endl;
         cout << "1 - inserir item" << endl;
         cout << "2 - cadastrar similaridade" << endl;
-        cout << "3 - bucar itens" << endl;
+        cout << "3 - buscar itens" << endl;
         cout << "4 - verificar itens" << endl;
         cout << "5 - listar itens por ordem alfabetica" << endl;
         cout << "6 - listar itens por raridade" << endl;
