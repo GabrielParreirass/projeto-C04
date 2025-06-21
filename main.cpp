@@ -12,8 +12,8 @@ struct Ponto {
 };
 
 struct ContornoItem {
-    vector<Ponto> pontos;  // Lista de pontos que definem o polígono
-    bool ehConvexo;        // Flag para indicar se o polígono é convexo
+    vector<Ponto> pontos;  
+    bool ehConvexo;        
 };
 
 struct item {
@@ -22,7 +22,7 @@ struct item {
     string propMagica;
     int numIdent;
     int raridade;
-    ContornoItem contorno;  // Adicionando a estrutura de contorno
+    ContornoItem contorno;  
 };
 
 struct Aresta
@@ -42,10 +42,11 @@ struct NodeAlfabetica
     NodeAlfabetica *direita;
 };
 
-
-
-
-
+struct NodeRaridade {
+    item dados;
+    NodeRaridade *esquerda;
+    NodeRaridade *direita;
+};
 
 Node *raiz = nullptr;
 
@@ -62,13 +63,13 @@ bool verificarConvexidade(const vector<Ponto>& pontos) {
         Ponto p2 = pontos[(i+1)%n];
         Ponto p3 = pontos[(i+2)%n];
 
-        // Calcula o produto vetorial
-        double cross = (p2.x - p1.x)*(p3.y - p2.y) - (p2.y - p1.y)*(p3.x - p2.x);
+        
+        double produtoVetorial = (p2.x - p1.x)*(p3.y - p2.y) - (p2.y - p1.y)*(p3.x - p2.x);
 
-        if (cross != 0) {
+        if (produtoVetorial != 0) {
             if (sinal == 0) {
-                sinal = (cross > 0) ? 1 : -1;
-            } else if ((cross > 0 && sinal == -1) || (cross < 0 && sinal == 1)) {
+                sinal = (produtoVetorial > 0) ? 1 : -1;
+            } else if ((produtoVetorial > 0 && sinal == -1) || (produtoVetorial < 0 && sinal == 1)) {
                 return false;  // Polígono não é convexo
             }
         }
@@ -353,48 +354,57 @@ void listar_itens_alfabetica()
     listar_itens_ordem_alfabetica();
 }
 
-void listar_itens_raridade()
-{
-    if (inventario.empty())
-    {
+NodeRaridade* inserirPorRaridade(NodeRaridade* raiz, item novoItem) {
+    if (raiz == NULL) {
+        NodeRaridade* novoNo = new NodeRaridade;
+        novoNo->dados = novoItem;
+        novoNo->esquerda = NULL;
+        novoNo->direita = NULL;
+        return novoNo;
+    }
+
+    // Decrescente: maiores para a esquerda
+    if (novoItem.raridade > raiz->dados.raridade)
+        raiz->esquerda = inserirPorRaridade(raiz->esquerda, novoItem);
+    else
+        raiz->direita = inserirPorRaridade(raiz->direita, novoItem);
+
+    return raiz;
+}
+
+void listarEmOrdemRaridade(NodeRaridade* raiz) {
+    if (raiz != NULL) {
+        listarEmOrdemRaridade(raiz->esquerda);
+        cout << "Item: " << raiz->dados.nome << endl;
+        cout << "Dono: " << raiz->dados.nomeDono << endl;
+        cout << "Propriedade: " << raiz->dados.propMagica << endl;
+        cout << "Raridade: " << raiz->dados.raridade << endl;
+        cout << "Numero de Identificacao: " << raiz->dados.numIdent << endl;
+        cout << "-------------------------" << endl;
+        listarEmOrdemRaridade(raiz->direita);
+    }
+}
+
+void listar_itens_raridade() {
+    if (inventario.empty()) {
         cout << "Nenhum item no inventario." << endl;
         return;
     }
 
+    NodeRaridade* raiz = NULL;
 
-    
-    vector<item> inventarioOrdenado = inventario;
-
-    int tamanhoInventario = inventarioOrdenado.size();
-
-   
-    for (int i = 0; i < tamanhoInventario - 1; ++i)
-    {
-        for (int j = 0; j < tamanhoInventario - i - 1; ++j)
-        {
-            if (inventarioOrdenado[j].raridade < inventarioOrdenado[j + 1].raridade)
-            {
-                
-                item temp = inventarioOrdenado[j];
-                inventarioOrdenado[j] = inventarioOrdenado[j + 1];
-                inventarioOrdenado[j + 1] = temp;
-            }
-        }
+    // Inserir todos os itens na árvore por raridade
+    for (size_t i = 0; i < inventario.size(); i++) {
+        raiz = inserirPorRaridade(raiz, inventario[i]);
     }
 
     cout << "ITENS ORDENADOS POR RARIDADE (DECRESCENTE):" << endl;
     cout << "------------------------------------------" << endl;
 
-    for (int i = 0; i < tamanhoInventario; i++)
-    {
-        cout << "Item: " << inventarioOrdenado[i].nome << endl;
-        cout << "Dono: " <<  inventarioOrdenado[i].nomeDono << endl;
-        cout << "Propriedade: " <<  inventarioOrdenado[i].propMagica << endl;
-        cout << "Raridade: " <<  inventarioOrdenado[i].raridade << endl;
-        cout << "Numero de Identificacao: " <<  inventarioOrdenado[i].numIdent << endl;
-        cout << "-------------------------" << endl;
-    }
+    listarEmOrdemRaridade(raiz);
 }
+
+
 
 void contar_itens_mesma_prop()
 {
