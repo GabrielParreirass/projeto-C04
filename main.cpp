@@ -29,12 +29,7 @@ struct Aresta
 {
     int origem, destino, peso;
 };
-struct Node
-{
-    item dado;
-    Node *esquerda;
-    Node *direita;
-};
+
 struct NodeAlfabetica
 {
     item dados;
@@ -48,14 +43,13 @@ struct NodeRaridade {
     NodeRaridade *direita;
 };
 
-Node *raiz = nullptr;
 
 vector<item> inventario;
 list<Aresta> grafo[1000];
 
 bool verificarConvexidade(const vector<Ponto>& pontos) {
     int n = pontos.size();
-    if (n < 3) return false;  // Não é polígono válido
+    if (n < 3) return false;  
 
     int sinal = 0;
     for (int i = 0; i < n; i++) {
@@ -70,11 +64,11 @@ bool verificarConvexidade(const vector<Ponto>& pontos) {
             if (sinal == 0) {
                 sinal = (produtoVetorial > 0) ? 1 : -1;
             } else if ((produtoVetorial > 0 && sinal == -1) || (produtoVetorial < 0 && sinal == 1)) {
-                return false;  // Polígono não é convexo
+                return false;  
             }
         }
     }
-    return true;  // Polígono é convexo
+    return true;  
 }
 
 NodeAlfabetica *inserirPorNome(NodeAlfabetica *raiz, item novoItem)
@@ -120,7 +114,7 @@ void listar_itens_ordem_alfabetica()
 
     NodeAlfabetica *raiz = NULL;
 
-    // Inserir todos os itens do inventário na árvore
+    
     for (size_t i = 0; i < inventario.size(); i++)
     {
         raiz = inserirPorNome(raiz, inventario[i]);
@@ -301,7 +295,7 @@ void verificar_item()
     cout << "Digite o valor minimo de similaridade: ";
     cin >> valorSimilaridadeX;
 
-    // Verificar se o item C existe
+    
     bool itemCExiste = false;
     for (int i = 0; i < tamanhoInventario; i++)
     {
@@ -363,7 +357,7 @@ NodeRaridade* inserirPorRaridade(NodeRaridade* raiz, item novoItem) {
         return novoNo;
     }
 
-    // Decrescente: maiores para a esquerda
+  
     if (novoItem.raridade > raiz->dados.raridade)
         raiz->esquerda = inserirPorRaridade(raiz->esquerda, novoItem);
     else
@@ -393,7 +387,7 @@ void listar_itens_raridade() {
 
     NodeRaridade* raiz = NULL;
 
-    // Inserir todos os itens na árvore por raridade
+    
     for (size_t i = 0; i < inventario.size(); i++) {
         raiz = inserirPorRaridade(raiz, inventario[i]);
     }
